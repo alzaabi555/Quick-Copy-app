@@ -3,7 +3,7 @@
 
     <application
         android:label="الراصد السريع"
-        android:theme="@android:style/Theme.DeviceDefault">
+        android:theme="@android:style/Theme.DeviceDefault.Light">
         
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -24,6 +24,5 @@
                 android:name="android.view.im"
                 android:resource="@xml/method" />
         </service>
-
     </application>
 </manifest>
