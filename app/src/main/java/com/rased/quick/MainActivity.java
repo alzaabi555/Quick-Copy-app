@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import java.io.InputStream;
 
 public class MainActivity extends Activity {
     @Override
@@ -15,31 +16,42 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
 
-        // هنا يكمن السحر: إعداد عميل الويب ليقوم بحقن الكود بعد تحميل الصفحة
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                // كود جافاسكربت لإخفاء الخيارات الزائدة وتوسيط خيار الحاسوب
-                String jsCode = "javascript:(function() { " +
+                // 1. كود تجميل صفحة تسجيل الدخول (الذي عملناه سابقاً)
+                String uiCleanUpJs = "javascript:(function() { " +
                         "var boxes = document.querySelectorAll('.boxContainer .box'); " +
-                        "if(boxes.length >= 3) { " +
-                        "   boxes[1].style.display = 'none'; " + // إخفاء البطاقة الذكية
-                        "   boxes[2].style.display = 'none'; " + // إخفاء الهاتف الذكي
-                        "} " +
+                        "if(boxes.length >= 3) { boxes[1].style.display = 'none'; boxes[2].style.display = 'none'; } " +
                         "var container = document.querySelector('.boxContainer'); " +
-                        "if(container) { " +
-                        "   container.style.display = 'flex'; " +
-                        "   container.style.justifyContent = 'center'; " + // توسيط المربع المتبقي
-                        "} " +
+                        "if(container) { container.style.display = 'flex'; container.style.justifyContent = 'center'; } " +
                         "})()";
-                
-                // تنفيذ الكود داخل الصفحة
-                view.evaluateJavascript(jsCode, null);
+                view.evaluateJavascript(uiCleanUpJs, null);
+
+                // 2. قراءة كود "الراصد السريع" من مجلد assets وحقنه
+                String rasedJs = readAssetFile("rased.js");
+                if (!rasedJs.isEmpty()) {
+                    view.evaluateJavascript("javascript:" + rasedJs, null);
+                }
             }
         });
         
-        // رابط البوابة التعليمية
         myWebView.loadUrl("https://eportal.moe.gov.om/");
         setContentView(myWebView);
+    }
+
+    // دالة مساعدة لفتح وقراءة الملفات من مجلد assets
+    private String readAssetFile(String filename) {
+        try {
+            InputStream is = getAssets().open(filename);
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            return new String(buffer, "UTF-8");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }
