@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -13,82 +14,41 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class RasedKeyboardService extends InputMethodService {
 
     @Override
     public View onCreateInputView() {
-        // 1. خلفية الكيبورد (Dark Mode فخم)
+        // 1. الخلفية الرئيسية للكيبورد (Dark Mode احترافي)
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.VERTICAL);
-        rootLayout.setBackgroundColor(0xFF1C1C1E); // لون أيفون الداكن
-        rootLayout.setPadding(25, 30, 25, 30);
+        rootLayout.setBackgroundColor(0xFF1C1C1E); // لون كيبورد أيفون الداكن
+        // تحديد ارتفاع ثابت للكيبورد ليكون طبيعياً (حوالي 260dp)
+        rootLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(260)
+        ));
 
-        // 2. الزر الرئيسي للرصد (أخضر زاهي مع حواف ناعمة)
-        Button btnRased = new Button(this);
-        btnRased.setText("🚀 بدء الرصد التلقائي للدرجات");
-        btnRased.setTextSize(18);
-        btnRased.setTextColor(0xFFFFFFFF);
-        btnRased.setAllCaps(false); // لمنع تكبير الحروف الإنجليزية إن وجدت
-        btnRased.setTypeface(null, android.graphics.Typeface.BOLD);
-        btnRased.setBackground(createPremiumButton(0xFF34C759)); // Apple Green
-
-        LinearLayout.LayoutParams paramsMain = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 220
-        );
-        paramsMain.setMargins(0, 0, 0, 25);
-        btnRased.setLayoutParams(paramsMain);
-        
-        btnRased.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startAutoFill();
-            }
-        });
-
-        // 3. تخطيط الأزرار السفلية (أفقي)
-        LinearLayout utilLayout = new LinearLayout(this);
-        utilLayout.setOrientation(LinearLayout.HORIZONTAL);
-        utilLayout.setLayoutParams(new LinearLayout.LayoutParams(
+        // 2. شريط الأدوات العلوي (يحتوي على أزرار الإغلاق والتبديل)
+        LinearLayout topBar = new LinearLayout(this);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+        topBar.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        topBar.setPadding(dp(10), dp(10), dp(10), dp(0));
+        topBar.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
         ));
 
-        // 4. زر العودة للكيبورد العادي
-        Button btnSwitch = new Button(this);
-        btnSwitch.setText("🌐 لوحة المفاتيح");
-        btnSwitch.setTextColor(0xFFFFFFFF);
-        btnSwitch.setTextSize(15);
-        btnSwitch.setBackground(createPremiumButton(0xFF3A3A3C)); // لون رمادي فاخر
-        
-        LinearLayout.LayoutParams paramsSwitch = new LinearLayout.LayoutParams(
-                0, 150, 1.0f
-        );
-        paramsSwitch.setMargins(0, 0, 15, 0); // مسافة بين الزرين
-        btnSwitch.setLayoutParams(paramsSwitch);
-        
+        Button btnSwitch = createIconButton("🌐 لوحة المفاتيح");
         btnSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showInputMethodPicker();
-                }
+                if (imm != null) imm.showInputMethodPicker();
             }
         });
 
-        // 5. زر الإغلاق
-        Button btnHide = new Button(this);
-        btnHide.setText("⌨️ إخفاء");
-        btnHide.setTextColor(0xFFFFFFFF);
-        btnHide.setTextSize(15);
-        btnHide.setBackground(createPremiumButton(0xFF3A3A3C));
-        
-        LinearLayout.LayoutParams paramsHide = new LinearLayout.LayoutParams(
-                0, 150, 1.0f
-        );
-        btnHide.setLayoutParams(paramsHide);
-        
+        Button btnHide = createIconButton("⬇️ إغلاق");
         btnHide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,21 +56,89 @@ public class RasedKeyboardService extends InputMethodService {
             }
         });
 
-        // تجميع العناصر
-        utilLayout.addView(btnSwitch);
-        utilLayout.addView(btnHide);
+        // إضافة مسافة مرنة لدفع الأزرار لليمين أو اليسار
+        View spacer = new View(this);
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(0, 0, 1.0f));
 
-        rootLayout.addView(btnRased);
-        rootLayout.addView(utilLayout);
+        topBar.addView(btnSwitch);
+        topBar.addView(spacer);
+        topBar.addView(btnHide);
+
+        // 3. منطقة المنتصف (تحتوي على زر الرصد الأنيق)
+        LinearLayout centerArea = new LinearLayout(this);
+        centerArea.setOrientation(LinearLayout.VERTICAL);
+        centerArea.setGravity(Gravity.CENTER);
+        centerArea.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT
+        ));
+
+        Button btnRased = new Button(this);
+        btnRased.setText("🚀 بدء الرصد التلقائي");
+        btnRased.setTextSize(16);
+        btnRased.setTextColor(0xFFFFFFFF);
+        btnRased.setAllCaps(false);
+        btnRased.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnRased.setBackground(createPremiumButton(0xFF34C759, dp(30))); // أخضر أبل مع حواف دائرية بالكامل
+
+        // حجم الزر الآن احترافي (ليس كبيراً جداً ولا صغيراً)
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                dp(280), dp(55)
+        );
+        btnRased.setLayoutParams(btnParams);
+        btnRased.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startAutoFill();
+            }
+        });
+
+        // نص إرشادي أنيق تحت الزر
+        TextView statusText = new TextView(this);
+        statusText.setText("ضع المؤشر في أول مربع طالب، ثم اضغط الزر");
+        statusText.setTextColor(0xFF8E8E93); // رمادي فاتح
+        statusText.setTextSize(13);
+        statusText.setGravity(Gravity.CENTER);
+        statusText.setPadding(0, dp(15), 0, 0);
+
+        centerArea.addView(btnRased);
+        centerArea.addView(statusText);
+
+        // 4. تجميع كل القطع
+        rootLayout.addView(topBar);
+        rootLayout.addView(centerArea);
 
         return rootLayout;
     }
 
-    // دالة سحرية لصنع أزرار بحواف دائرية وتصميم مسطح (Flat Design)
-    private GradientDrawable createPremiumButton(int color) {
+    // دالة مساعدة لتحويل المقاسات لتبدو متطابقة في كل الشاشات
+    private int dp(int value) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics()
+        );
+    }
+
+    // دالة لصنع الأزرار العلوية الصغيرة
+    private Button createIconButton(String text) {
+        Button btn = new Button(this);
+        btn.setText(text);
+        btn.setTextColor(0xFFFFFFFF);
+        btn.setTextSize(13);
+        btn.setAllCaps(false);
+        btn.setBackground(createPremiumButton(0xFF3A3A3C, dp(10))); // حواف دائرية خفيفة
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(40)
+        );
+        params.setMargins(dp(5), 0, dp(5), 0);
+        btn.setLayoutParams(params);
+        btn.setPadding(dp(15), 0, dp(15), 0);
+        return btn;
+    }
+
+    // دالة لصنع الحواف الدائرية
+    private GradientDrawable createPremiumButton(int color, int radius) {
         GradientDrawable shape = new GradientDrawable();
         shape.setShape(GradientDrawable.RECTANGLE);
-        shape.setCornerRadius(40f); // حواف دائرية جداً وناعمة
+        shape.setCornerRadius(radius);
         shape.setColor(color);
         return shape;
     }
