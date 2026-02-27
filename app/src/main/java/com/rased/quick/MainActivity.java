@@ -2,6 +2,7 @@ package com.rased.quick;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.webkit.WebChromeClient; // <-- أضفنا هذه المكتبة
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -16,10 +17,13 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
 
+        // هذا السطر هو السحر الذي يسمح بظهور رسائل الـ Alert من الجافاسكربت
+        myWebView.setWebChromeClient(new WebChromeClient()); 
+
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                // 1. كود تجميل صفحة تسجيل الدخول (الذي عملناه سابقاً)
+                // 1. تجميل صفحة الدخول
                 String uiCleanUpJs = "javascript:(function() { " +
                         "var boxes = document.querySelectorAll('.boxContainer .box'); " +
                         "if(boxes.length >= 3) { boxes[1].style.display = 'none'; boxes[2].style.display = 'none'; } " +
@@ -28,7 +32,7 @@ public class MainActivity extends Activity {
                         "})()";
                 view.evaluateJavascript(uiCleanUpJs, null);
 
-                // 2. قراءة كود "الراصد السريع" من مجلد assets وحقنه
+                // 2. حقن إضافة الراصد
                 String rasedJs = readAssetFile("rased.js");
                 if (!rasedJs.isEmpty()) {
                     view.evaluateJavascript("javascript:" + rasedJs, null);
@@ -40,7 +44,6 @@ public class MainActivity extends Activity {
         setContentView(myWebView);
     }
 
-    // دالة مساعدة لفتح وقراءة الملفات من مجلد assets
     private String readAssetFile(String filename) {
         try {
             InputStream is = getAssets().open(filename);
