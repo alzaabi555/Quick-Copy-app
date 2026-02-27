@@ -1,12 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rased.quick">
-    
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="الراصد السريع"
-        android:theme="@android:style/Theme.NoTitleBar" 
-        android:usesCleartextTraffic="true">
+        android:theme="@android:style/Theme.DeviceDefault">
         
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -14,5 +11,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".RasedKeyboardService"
+            android:label="كيبورد الراصد السريع"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
     </application>
 </manifest>
