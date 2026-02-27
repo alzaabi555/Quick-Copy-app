@@ -2,7 +2,7 @@ package com.rased.quick;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.webkit.WebChromeClient; // <-- أضفنا هذه المكتبة
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -17,13 +17,13 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
 
-        // هذا السطر هو السحر الذي يسمح بظهور رسائل الـ Alert من الجافاسكربت
+        // تفعيل النوافذ المنبثقة (Alerts)
         myWebView.setWebChromeClient(new WebChromeClient()); 
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                // 1. تجميل صفحة الدخول
+                // 1. تجميل صفحة الدخول (إخفاء البطاقة والهاتف)
                 String uiCleanUpJs = "javascript:(function() { " +
                         "var boxes = document.querySelectorAll('.boxContainer .box'); " +
                         "if(boxes.length >= 3) { boxes[1].style.display = 'none'; boxes[2].style.display = 'none'; } " +
@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
                         "})()";
                 view.evaluateJavascript(uiCleanUpJs, null);
 
-                // 2. حقن إضافة الراصد
+                // 2. حقن إضافة الراصد السريع
                 String rasedJs = readAssetFile("rased.js");
                 if (!rasedJs.isEmpty()) {
                     view.evaluateJavascript("javascript:" + rasedJs, null);
@@ -40,7 +40,8 @@ public class MainActivity extends Activity {
             }
         });
         
-        myWebView.loadUrl("https://eportal.moe.gov.om/");
+        // الرابط الصحيح الذي سيعمل عليه سحر الراصد!
+        myWebView.loadUrl("https://moe.gov.om/Portal/Services/UserLoginnew.aspx");
         setContentView(myWebView);
     }
 
